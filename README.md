@@ -1,678 +1,169 @@
-\# Probabilistic Biped Navigation — MuJoCo Starting Repository
+# Probabilistic Biped Navigation — MuJoCo Starting Repository
 
+> **Based on:** *Probabilistically-Safe Bipedal Navigation over Uncertain Terrain via Conformal Prediction and Contraction Analysis*
 
+This repository is the starting point for implementing a MuJoCo-based bipedal navigation project. Since the Digit MuJoCo model is not available, this repository starts with a custom simplified MuJoCo humanoid. The purpose is to build the simulation, state-reading, and control infrastructure first, then gradually layer in the paper's components.
 
-This repository is the starting point for implementing a MuJoCo-based bipedal navigation project inspired by the paper:
+---
 
+## Repository Structure
 
-
-\*\*Probabilistically-Safe Bipedal Navigation over Uncertain Terrain via Conformal Prediction and Contraction Analysis\*\*
-
-
-
-The original paper uses the Digit biped robot in MuJoCo. Since the Digit MuJoCo model is not available here, this repository starts with a custom simplified MuJoCo humanoid model. The purpose is to first build the simulation, state-reading, and control infrastructure, and then gradually add the paper components: terrain uncertainty, conformal prediction, LIPM planning, MPC, reachable tubes, and flywheel torque correction.
-
-
-
-\---
-
-
-
-\## 1. What this repository currently contains
-
-
-
-```text
-
-probabilistic\_biped\_nav/
-
+```
+probabilistic_biped_nav/
 │
-
 ├── README.md
-
 ├── requirements.txt
-
-├── simple\_humanoid.xml
-
-└── test\_humanoid.py
-
+├── simple_humanoid.xml
+└── test_humanoid.py
 ```
 
+| File | Description |
+|------|-------------|
+| `simple_humanoid.xml` | Custom MuJoCo humanoid — torso, head, two legs, feet, hinge joints, actuators |
+| `test_humanoid.py` | Loads the XML model, opens the MuJoCo viewer, runs the simulation |
+| `requirements.txt` | Python packages for the current stage |
 
+---
 
-\### File descriptions
+## Setup from Scratch
 
+### 1. Install Python
 
+Download from [python.org/downloads](https://www.python.org/downloads/)
 
-```text
-
-simple\_humanoid.xml
-
-```
-
-
-
-A simple custom MuJoCo humanoid model with torso, head, two legs, feet, hinge joints, and actuators.
-
-
-
-```text
-
-test\_humanoid.py
-
-```
-
-
-
-Python script that loads the humanoid XML model, opens the MuJoCo viewer, and runs the simulation.
-
-
-
-```text
-
-requirements.txt
-
-```
-
-
-
-Python packages required for the current stage.
-
-
-
-\---
-
-
-
-\## 2. Installation from zero knowledge
-
-
-
-This section explains how to set up MuJoCo for someone starting from scratch.
-
-
-
-MuJoCo is a physics simulator used for robotics, control, locomotion, reinforcement learning, and contact-rich simulation. In this project, MuJoCo is used as the full-order robot simulation environment.
-
-
-
-The basic installation flow is:
-
-
-
-```text
-
-Install Python
-
-→ create a project folder
-
-→ create a virtual environment
-
-→ install MuJoCo
-
-→ run a small simulation
-
-```
-
-
-
-\---
-
-
-
-\## 3. Install Python
-
-
-
-First install Python from:
-
-
-
-```text
-
-https://www.python.org/downloads/
-
-```
-
-
-
-During installation on Windows, make sure to tick:
-
-
-
-```text
-
-Add Python to PATH
-
-```
-
-
-
-After installation, open PowerShell and check:
-
-
+> ⚠️ On Windows: tick **"Add Python to PATH"** during installation.
 
 ```powershell
-
 python --version
-
+# Expected: Python 3.10.x / 3.11.x / 3.12.x
 ```
 
-
-
-You should see something like:
-
-
-
-```text
-
-Python 3.10.x
-
-```
-
-
-
-or
-
-
-
-```text
-
-Python 3.11.x
-
-```
-
-
-
-Python 3.10, 3.11, or 3.12 is recommended for this project.
-
-
-
-\---
-
-
-
-\## 4. Create the project folder
-
-
-
-In PowerShell:
-
-
+### 2. Create the project folder
 
 ```powershell
-
-cd "D:\\GNC\_LAB\\LAB\_WORK"
-
-mkdir probabilistic\_biped\_nav
-
-cd probabilistic\_biped\_nav
-
+cd "D:\GNC_LAB\LAB_WORK"
+mkdir probabilistic_biped_nav
+cd probabilistic_biped_nav
 ```
 
-
-
-This becomes the project directory.
-
-
-
-\---
-
-
-
-\## 5. Create a virtual environment
-
-
-
-A virtual environment keeps the project packages separate from the rest of the computer.
-
-
-
-Run:
-
-
+### 3. Create and activate a virtual environment
 
 ```powershell
-
 python -m venv venv
-
+.\venv\Scripts\activate
 ```
 
+Your prompt should now show `(venv)` — this means Python is using the isolated project environment.
 
-
-This creates a folder called:
-
-
-
-```text
-
-venv
-
-```
-
-
-
-inside the project.
-
-
-
-\---
-
-
-
-\## 6. Activate the virtual environment
-
-
-
-On Windows PowerShell:
-
-
+### 4. Install dependencies
 
 ```powershell
-
-.\\venv\\Scripts\\activate
-
-```
-
-
-
-After activation, the terminal should show:
-
-
-
-```text
-
-(venv) PS D:\\GNC\_LAB\\LAB\_WORK\\probabilistic\_biped\_nav>
-
-```
-
-
-
-The `(venv)` is important. It means Python is now using the project environment.
-
-
-
-If `(venv)` is not visible, the environment is not active.
-
-
-
-\---
-
-
-
-\## 7. Install MuJoCo and required packages
-
-
-
-After activating the virtual environment, run:
-
-
-
-```powershell
-
 pip install --upgrade pip
-
 pip install mujoco numpy matplotlib
-
 ```
 
-
-
-The package `mujoco` provides the MuJoCo Python interface and viewer.
-
-
-
-The package `numpy` is used for numerical computation.
-
-
-
-The package `matplotlib` will be used later for plotting trajectories, terrain, phase portraits, and tracking errors.
-
-
-
-\---
-
-
-
-\## 8. Check that MuJoCo installed correctly
-
-
-
-Run:
-
-
+### 5. Verify MuJoCo installation
 
 ```powershell
-
-python -c "import mujoco; print(mujoco.\_\_version\_\_)"
-
+python -c "import mujoco; print(mujoco.__version__)"
+# Expected: 3.3.0 (or similar)
 ```
 
-
-
-If MuJoCo is installed correctly, this prints the installed MuJoCo version.
-
-
-
-Example:
-
-
-
-```text
-
-3.3.0
-
-```
-
-
-
-If this gives:
-
-
-
-```text
-
-ModuleNotFoundError: No module named 'mujoco'
-
-```
-
-
-
-then the virtual environment is probably not activated.
-
-
-
-Fix it by running:
-
-
+### 6. Run the humanoid test
 
 ```powershell
+python test_humanoid.py
+```
 
-.\\venv\\Scripts\\activate
+Expected: the MuJoCo viewer opens, a simple humanoid appears, simulation starts. The humanoid may fall — that is fine at this stage.
 
+---
+
+## Daily Workflow
+
+Every time you open a new terminal:
+
+```powershell
+cd "D:\GNC_LAB\LAB_WORK\probabilistic_biped_nav"
+.\venv\Scripts\activate
+python test_humanoid.py
+```
+
+MuJoCo does not need reinstalling — only the virtual environment activation is needed each session.
+
+---
+
+## Common Issues
+
+### `ModuleNotFoundError: No module named 'mujoco'`
+Virtual environment is not active. Run:
+```powershell
+.\venv\Scripts\activate
 pip install mujoco
-
 ```
 
-
-
-\---
-
-
-
-\## 9. Run the humanoid test
-
-
-
-After installing the packages, run:
-
-
-
+### PowerShell blocks activation
 ```powershell
-
-python test\_humanoid.py
-
-```
-
-
-
-Expected result:
-
-
-
-1\. The MuJoCo viewer opens.
-
-2\. A simple humanoid appears.
-
-3\. The simulation starts running.
-
-4\. The humanoid may fall, which is fine at this stage.
-
-
-
-At this stage, the goal is only to verify:
-
-
-
-```text
-
-MuJoCo installed
-
-→ model loads
-
-→ viewer opens
-
-→ simulation runs
-
-```
-
-
-
-Control will be added later.
-
-
-
-\---
-
-
-
-\## 10. Daily workflow
-
-
-
-Every time a new PowerShell terminal is opened, go to the project folder and activate the environment:
-
-
-
-```powershell
-
-cd "D:\\GNC\_LAB\\LAB\_WORK\\probabilistic\_biped\_nav"
-
-.\\venv\\Scripts\\activate
-
-python test\_humanoid.py
-
-```
-
-
-
-MuJoCo does not need to be installed again every time. Only the virtual environment needs to be activated.
-
-
-
-\---
-
-
-
-\## 11. Common beginner mistakes
-
-
-
-\### Mistake 1: Running from base instead of venv
-
-
-
-Wrong:
-
-
-
-```text
-
-(base) PS D:\\GNC\_LAB\\LAB\_WORK\\probabilistic\_biped\_nav>
-
-```
-
-
-
-Correct:
-
-
-
-```text
-
-(venv) (base) PS D:\\GNC\_LAB\\LAB\_WORK\\probabilistic\_biped\_nav>
-
-```
-
-
-
-If the prompt only shows `(base)` and not `(venv)`, activate the virtual environment:
-
-
-
-```powershell
-
-.\\venv\\Scripts\\activate
-
-```
-
-
-
-\---
-
-
-
-\### Mistake 2: MuJoCo not found
-
-
-
-Error:
-
-
-
-```text
-
-ModuleNotFoundError: No module named 'mujoco'
-
-```
-
-
-
-Fix:
-
-
-
-```powershell
-
-cd "D:\\GNC\_LAB\\LAB\_WORK\\probabilistic\_biped\_nav"
-
-.\\venv\\Scripts\\activate
-
-pip install mujoco
-
-python test\_humanoid.py
-
-```
-
-
-
-\---
-
-
-
-\### Mistake 3: PowerShell blocks activation
-
-
-
-If PowerShell refuses to activate the environment, run:
-
-
-
-```powershell
-
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
-
+.\venv\Scripts\activate
 ```
 
+### Prompt shows `(base)` but not `(venv)`
+You are in conda base, not the project venv. Run the activate command above.
 
+---
 
-Then try again:
-
-
-
-```powershell
-
-.\\venv\\Scripts\\activate
+## Project Roadmap
 
 ```
+Phase 1 — Simulation Foundation (current)
+  ├── MuJoCo humanoid model
+  ├── Viewer and simulation loop
+  └── Robot state reading (torso pos/vel, foot pos, contact)
 
+Phase 2 — Stabilization
+  └── Simple PD standing controller
 
+Phase 3 — Terrain
+  ├── Procedural terrain generation
+  └── Gaussian Process terrain estimation
 
-\---
+Phase 4 — Uncertainty Quantification
+  └── Conformal prediction terrain interval
 
+Phase 5 — Planning
+  ├── CP-safe footstep planning
+  └── LIPM / Aug-LIPM reference dynamics
 
+Phase 6 — Robust Control
+  ├── Robust control invariant tube
+  └── Flywheel torque correction
 
-\## 12. Project roadmap
-
-
-
-The final goal is to build the following pipeline:
-
-
-
-```text
-
-MuJoCo humanoid simulation
-
-→ robot state reading
-
-→ foot/contact detection
-
-→ simple standing controller
-
-→ terrain generation
-
-→ Gaussian Process terrain estimation
-
-→ conformal prediction terrain interval
-
-→ CP-safe footstep planning
-
-→ LIPM / Aug-LIPM reference dynamics
-
-→ robust control invariant tube
-
-→ flywheel torque correction
-
-→ full simulation and plots
-
+Phase 7 — Full Pipeline
+  └── Simulation + tracking plots
 ```
 
+The paper's philosophy: uncertain terrain is estimated → uncertainty is converted into planning/control constraints → full-order robot simulation tests whether CoM motion stays safe and trackable.
 
+---
 
-The paper uses this same high-level philosophy: uncertain terrain is estimated, uncertainty is converted into planning and control constraints, and a full-order robot simulation is used to test whether the desired center-of-mass motion remains safe and trackable.
+## Current Next Step
 
+Read robot states from MuJoCo:
 
-
-\---
-
-
-
-\## 13. Current next step
-
-
-
-The next coding step is to read robot states from MuJoCo:
-
-
-
-```text
-
-torso position
-
-torso velocity
-
-left foot position
-
-right foot position
-
-contact count
-
+```python
+# Target state variables
+torso_position    # 3D CoM position
+torso_velocity    # 3D CoM velocity
+left_foot_pos     # 3D left foot position
+right_foot_pos    # 3D right foot position
+contact_count     # number of active ground contacts
 ```
 
+After state reading, a simple PD stabilizer will be added so the humanoid does not immediately collapse.
 
+---
 
-After that, a simple PD stabilizer will be added so that the humanoid does not immediately collapse.
+## Reference
 
-
-
+Probabilistically-Safe Bipedal Navigation over Uncertain Terrain via Conformal Prediction and Contraction Analysis
