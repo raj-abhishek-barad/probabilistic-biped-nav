@@ -1,0 +1,10 @@
+terrain,framework,trial,goal_reached,n_steps,avg_norm_error,rci_fraction,cp_coverage,sim_time_s,max_error,w_bar_terrain,mean_saltation_norm
+T1_bumpy,Ours,0,0,0,nan,0.000000,nan,nan,nan,nan,nan
+T1_bumpy,Ours w/o τ_y,0,0,0,nan,0.000000,nan,nan,nan,nan,nan
+T1_bumpy,Baseline MPC,0,1,24,1993062.306587,1.000000,1.000000,0.82,39234839.802758,4.969066,1.753235
+T2_wavy,Ours,0,0,0,nan,0.000000,nan,nan,nan,nan,nan
+T2_wavy,Ours w/o τ_y,0,0,0,nan,0.000000,nan,nan,nan,nan,nan
+T2_wavy,Baseline MPC,0,1,24,4429442.103823,1.000000,0.880000,0.78,87196697.430986,5.405445,1.754008
+T3_hilly,Ours,0,0,19,0.011085,1.000000,1.000000,1.30,0.152083,3.057335,1.715538
+T3_hilly,Ours w/o τ_y,0,0,19,10331.406182,1.000000,1.000000,1.31,161024.317763,3.057335,1.715538
+T3_hilly,Baseline MPC,0,1,21,48447.323168,1.000000,0.909091,0.69,834544.459309,3.057335,1.734630

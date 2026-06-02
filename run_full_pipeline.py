@@ -9,7 +9,7 @@ from lipm_cp_safe_waypoint_mpc_fast import (
     candidate_controls,
 )
 
-from rci_tube_tracking_demo import simulate_tracking_with_rci_tube
+from rci_tube_certified import simulate_tracking_with_rci_tube
 
 
 def evaluate_true_step_safety(states, delta_h_max):
