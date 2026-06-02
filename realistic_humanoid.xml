@@ -1,0 +1,252 @@
+<mujoco model="realistic_humanoid">
+
+  <!--
+    Realistic humanoid model for probabilistic bipedal navigation.
+    Proportions based on a 1.75 m, 75 kg adult biped.
+    Includes: torso, neck, head, upper/lower arms, hands,
+              pelvis, upper/lower legs with realistic segment lengths,
+              and anatomically-shaped feet with heel+toe geoms.
+    Materials use skin-tone + fabric color scheme for visual realism.
+  -->
+
+  <compiler angle="degree" coordinate="local"/>
+  <option timestep="0.002" gravity="0 0 -9.81" iterations="50" solver="Newton"/>
+
+  <default>
+    <joint damping="2.0" armature="0.02" stiffness="0.0" limited="true"/>
+    <geom friction="1.2 0.005 0.0001" density="900" condim="3"/>
+    <motor ctrlrange="-200 200" ctrllimited="true"/>
+  </default>
+
+  <asset>
+    <!-- Ground textures -->
+    <texture name="tex_ground" type="2d" builtin="checker"
+             width="1024" height="1024"
+             rgb1="0.32 0.30 0.28" rgb2="0.42 0.40 0.36"/>
+    <material name="mat_ground" texture="tex_ground" texrepeat="6 6"
+              reflectance="0.05" specular="0.1" shininess="0.05"/>
+
+    <!-- Robot materials -->
+    <material name="mat_torso"      rgba="0.18 0.22 0.55 1"/>   <!-- dark navy suit -->
+    <material name="mat_pelvis"     rgba="0.15 0.18 0.48 1"/>
+    <material name="mat_head"       rgba="0.88 0.72 0.56 1"/>   <!-- skin tone -->
+    <material name="mat_neck"       rgba="0.88 0.72 0.56 1"/>
+    <material name="mat_arm_upper"  rgba="0.18 0.22 0.55 1"/>
+    <material name="mat_arm_lower"  rgba="0.78 0.62 0.48 1"/>   <!-- skin forearm -->
+    <material name="mat_hand"       rgba="0.85 0.68 0.52 1"/>
+    <material name="mat_leg_upper"  rgba="0.20 0.22 0.52 1"/>   <!-- trousers -->
+    <material name="mat_leg_lower"  rgba="0.24 0.26 0.56 1"/>
+    <material name="mat_foot"       rgba="0.12 0.12 0.14 1"/>   <!-- dark shoes -->
+    <material name="mat_shoe_sole"  rgba="0.08 0.08 0.09 1"/>
+  </asset>
+
+  <worldbody>
+
+    <light name="sun"       pos="0 0 10"  dir="0 -0.3 -1"  diffuse="0.85 0.85 0.80" specular="0.2 0.2 0.2" castshadow="true"/>
+    <light name="fill"      pos="5 -5 6"  dir="-1 1 -1"    diffuse="0.35 0.35 0.40" specular="0.0 0.0 0.0" castshadow="false"/>
+    <light name="backlight" pos="-3 3 5"  dir="1 -0.5 -1"  diffuse="0.20 0.20 0.25" specular="0.0 0.0 0.0" castshadow="false"/>
+
+    <!-- Ground -->
+    <geom name="ground" type="plane" size="20 20 0.1" material="mat_ground" pos="0 0 0"/>
+
+    <!--
+      ── TORSO + SPINE CHAIN ─────────────────────────────────────────
+      Root freejoint at pelvis center (hip height ≈ 0.92 m).
+      Spine: pelvis → lower_back → upper_back → chest.
+    -->
+    <body name="pelvis" pos="0 0 0.94">
+      <freejoint name="root"/>
+      <geom name="pelvis_geom" type="capsule"
+            fromto="0 -0.09 0 0 0.09 0"
+            size="0.095" material="mat_pelvis"/>
+
+      <!-- Lower back -->
+      <body name="lower_back" pos="0 0 0.12">
+        <joint name="lower_back_x" type="hinge" axis="1 0 0" range="-25 25" damping="3"/>
+        <joint name="lower_back_y" type="hinge" axis="0 1 0" range="-20 20" damping="3"/>
+        <geom name="lower_back_geom" type="capsule"
+              fromto="0 0 0 0 0 0.13"
+              size="0.075" material="mat_torso"/>
+
+        <!-- Chest / upper torso -->
+        <body name="chest" pos="0 0 0.14">
+          <joint name="chest_x" type="hinge" axis="1 0 0" range="-20 20" damping="3"/>
+          <geom name="chest_geom" type="capsule"
+                fromto="0 0 0 0 0 0.26"
+                size="0.090" material="mat_torso"/>
+
+          <!-- Neck -->
+          <body name="neck" pos="0 0 0.28">
+            <joint name="neck_x" type="hinge" axis="1 0 0" range="-40 40" damping="1"/>
+            <joint name="neck_y" type="hinge" axis="0 0 1" range="-60 60" damping="1"/>
+            <geom name="neck_geom" type="capsule"
+                  fromto="0 0 0 0 0 0.085"
+                  size="0.038" material="mat_neck"/>
+
+            <!-- Head -->
+            <body name="head" pos="0 0 0.10">
+              <geom name="head_geom"  type="sphere" size="0.115" material="mat_head"/>
+              <!-- Eyes (small dark spheres for realism) -->
+              <geom name="eye_l" type="sphere" size="0.018"
+                    pos="0.08 0.035 0.02" rgba="0.1 0.1 0.1 1"/>
+              <geom name="eye_r" type="sphere" size="0.018"
+                    pos="0.08 -0.035 0.02" rgba="0.1 0.1 0.1 1"/>
+            </body>
+          </body>
+
+          <!-- ── LEFT ARM ──────────────────────────────────────── -->
+          <body name="left_upper_arm" pos="0 0.175 0.22">
+            <joint name="left_shoulder_x" type="hinge" axis="1 0 0" range="-90 90"  damping="2"/>
+            <joint name="left_shoulder_y" type="hinge" axis="0 1 0" range="-60 150" damping="2"/>
+            <joint name="left_shoulder_z" type="hinge" axis="0 0 1" range="-60 60"  damping="1"/>
+            <geom name="left_upper_arm_geom" type="capsule"
+                  fromto="0 0 0 0 0.02 -0.30"
+                  size="0.040" material="mat_arm_upper"/>
+            <body name="left_lower_arm" pos="0 0.02 -0.32">
+              <joint name="left_elbow" type="hinge" axis="0 1 0" range="-130 10" damping="1.5"/>
+              <geom name="left_lower_arm_geom" type="capsule"
+                    fromto="0 0 0 0 0 -0.26"
+                    size="0.032" material="mat_arm_lower"/>
+              <body name="left_hand" pos="0 0 -0.27">
+                <joint name="left_wrist" type="hinge" axis="0 1 0" range="-60 60" damping="0.5"/>
+                <geom name="left_hand_geom" type="sphere" size="0.040" material="mat_hand"/>
+              </body>
+            </body>
+          </body>
+
+          <!-- ── RIGHT ARM ─────────────────────────────────────── -->
+          <body name="right_upper_arm" pos="0 -0.175 0.22">
+            <joint name="right_shoulder_x" type="hinge" axis="1 0 0" range="-90 90"  damping="2"/>
+            <joint name="right_shoulder_y" type="hinge" axis="0 1 0" range="-60 150" damping="2"/>
+            <joint name="right_shoulder_z" type="hinge" axis="0 0 1" range="-60 60"  damping="1"/>
+            <geom name="right_upper_arm_geom" type="capsule"
+                  fromto="0 0 0 0 -0.02 -0.30"
+                  size="0.040" material="mat_arm_upper"/>
+            <body name="right_lower_arm" pos="0 -0.02 -0.32">
+              <joint name="right_elbow" type="hinge" axis="0 1 0" range="-130 10" damping="1.5"/>
+              <geom name="right_lower_arm_geom" type="capsule"
+                    fromto="0 0 0 0 0 -0.26"
+                    size="0.032" material="mat_arm_lower"/>
+              <body name="right_hand" pos="0 0 -0.27">
+                <joint name="right_wrist" type="hinge" axis="0 1 0" range="-60 60" damping="0.5"/>
+                <geom name="right_hand_geom" type="sphere" size="0.040" material="mat_hand"/>
+              </body>
+            </body>
+          </body>
+
+        </body><!-- chest -->
+      </body><!-- lower_back -->
+
+      <!-- ── LEFT LEG ─────────────────────────────────────────────── -->
+      <body name="left_upper_leg" pos="0 0.10 -0.04">
+        <joint name="left_hip_x" type="hinge" axis="1 0 0" range="-30 30"  damping="4"/>
+        <joint name="left_hip_y" type="hinge" axis="0 1 0" range="-50 100" damping="4"/>
+        <joint name="left_hip_z" type="hinge" axis="0 0 1" range="-25 25"  damping="3"/>
+        <geom name="left_upper_leg_geom" type="capsule"
+              fromto="0 0 0 0 0 -0.42"
+              size="0.060" material="mat_leg_upper"/>
+        <body name="left_lower_leg" pos="0 0 -0.44">
+          <joint name="left_knee" type="hinge" axis="0 1 0" range="-120 5" damping="3"/>
+          <geom name="left_lower_leg_geom" type="capsule"
+                fromto="0 0 0 0 0 -0.40"
+                size="0.045" material="mat_leg_lower"/>
+          <!-- Knee cap bump -->
+          <geom name="left_knee_cap" type="sphere" size="0.048"
+                pos="0.025 0 0" rgba="0.24 0.26 0.56 1"/>
+          <body name="left_foot" pos="0 0 -0.42">
+            <joint name="left_ankle_y" type="hinge" axis="0 1 0" range="-35 25" damping="2"/>
+            <joint name="left_ankle_x" type="hinge" axis="1 0 0" range="-15 15" damping="1"/>
+            <!-- Heel -->
+            <geom name="left_heel" type="capsule"
+                  fromto="-0.07 0 -0.02 -0.01 0 -0.02"
+                  size="0.040" material="mat_foot"/>
+            <!-- Mid-foot -->
+            <geom name="left_midfoot" type="box"
+                  size="0.095 0.045 0.025"
+                  pos="0.06 0 -0.015" material="mat_foot"/>
+            <!-- Toe -->
+            <geom name="left_toe" type="capsule"
+                  fromto="0.13 -0.03 -0.02 0.16 0.03 -0.02"
+                  size="0.028" material="mat_foot"/>
+            <!-- Sole (thin contact surface) -->
+            <geom name="left_sole" type="box"
+                  size="0.12 0.048 0.008"
+                  pos="0.04 0 -0.045"
+                  material="mat_shoe_sole" friction="1.4 0.005 0.0001"/>
+          </body>
+        </body>
+      </body>
+
+      <!-- ── RIGHT LEG ────────────────────────────────────────────── -->
+      <body name="right_upper_leg" pos="0 -0.10 -0.04">
+        <joint name="right_hip_x" type="hinge" axis="1 0 0" range="-30 30"  damping="4"/>
+        <joint name="right_hip_y" type="hinge" axis="0 1 0" range="-50 100" damping="4"/>
+        <joint name="right_hip_z" type="hinge" axis="0 0 1" range="-25 25"  damping="3"/>
+        <geom name="right_upper_leg_geom" type="capsule"
+              fromto="0 0 0 0 0 -0.42"
+              size="0.060" material="mat_leg_upper"/>
+        <body name="right_lower_leg" pos="0 0 -0.44">
+          <joint name="right_knee" type="hinge" axis="0 1 0" range="-120 5" damping="3"/>
+          <geom name="right_lower_leg_geom" type="capsule"
+                fromto="0 0 0 0 0 -0.40"
+                size="0.045" material="mat_leg_lower"/>
+          <geom name="right_knee_cap" type="sphere" size="0.048"
+                pos="0.025 0 0" rgba="0.24 0.26 0.56 1"/>
+          <body name="right_foot" pos="0 0 -0.42">
+            <joint name="right_ankle_y" type="hinge" axis="0 1 0" range="-35 25" damping="2"/>
+            <joint name="right_ankle_x" type="hinge" axis="1 0 0" range="-15 15" damping="1"/>
+            <geom name="right_heel" type="capsule"
+                  fromto="-0.07 0 -0.02 -0.01 0 -0.02"
+                  size="0.040" material="mat_foot"/>
+            <geom name="right_midfoot" type="box"
+                  size="0.095 0.045 0.025"
+                  pos="0.06 0 -0.015" material="mat_foot"/>
+            <geom name="right_toe" type="capsule"
+                  fromto="0.13 -0.03 -0.02 0.16 0.03 -0.02"
+                  size="0.028" material="mat_foot"/>
+            <geom name="right_sole" type="box"
+                  size="0.12 0.048 0.008"
+                  pos="0.04 0 -0.045"
+                  material="mat_shoe_sole" friction="1.4 0.005 0.0001"/>
+          </body>
+        </body>
+      </body>
+
+    </body><!-- pelvis -->
+  </worldbody>
+
+  <!--
+    ── ACTUATORS ──────────────────────────────────────────────────────
+    Primary walking joints. Gear ratios tuned for 75 kg biped.
+    Hip: 100 Nm, knee: 100 Nm, ankle: 60 Nm.
+    Arms and spine are lower-torque for balance/posture.
+  -->
+  <actuator>
+    <!-- Legs (primary locomotion) -->
+    <motor name="left_hip_y"       joint="left_hip_y"        gear="100"/>
+    <motor name="left_hip_x"       joint="left_hip_x"        gear="60"/>
+    <motor name="left_hip_z"       joint="left_hip_z"        gear="40"/>
+    <motor name="left_knee"        joint="left_knee"         gear="100"/>
+    <motor name="left_ankle_y"     joint="left_ankle_y"      gear="60"/>
+    <motor name="left_ankle_x"     joint="left_ankle_x"      gear="30"/>
+
+    <motor name="right_hip_y"      joint="right_hip_y"       gear="100"/>
+    <motor name="right_hip_x"      joint="right_hip_x"       gear="60"/>
+    <motor name="right_hip_z"      joint="right_hip_z"       gear="40"/>
+    <motor name="right_knee"       joint="right_knee"        gear="100"/>
+    <motor name="right_ankle_y"    joint="right_ankle_y"     gear="60"/>
+    <motor name="right_ankle_x"    joint="right_ankle_x"     gear="30"/>
+
+    <!-- Spine (CCM flywheel torque interface) -->
+    <motor name="lower_back_x"     joint="lower_back_x"      gear="50"/>
+    <motor name="lower_back_y"     joint="lower_back_y"      gear="50"/>
+    <motor name="chest_x"          joint="chest_x"           gear="30"/>
+
+    <!-- Arms (balance + swing) -->
+    <motor name="left_shoulder_y"  joint="left_shoulder_y"   gear="30"/>
+    <motor name="left_elbow"       joint="left_elbow"        gear="20"/>
+    <motor name="right_shoulder_y" joint="right_shoulder_y"  gear="30"/>
+    <motor name="right_elbow"      joint="right_elbow"       gear="20"/>
+  </actuator>
+
+</mujoco>
