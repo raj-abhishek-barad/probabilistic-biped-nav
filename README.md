@@ -73,7 +73,13 @@ probabilistic_biped_nav/
 ---
 
 ## Setup from Scratch
+## Main commands
 
+Activate the virtual environment first:
+
+```powershell
+cd "D:\GNC_LAB\LAB_WORK\probabilistic_biped_nav"
+.\venv\Scripts\activate
 ### 1. Install Python
 
 Download Python from:
